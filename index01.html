@@ -1,0 +1,25 @@
+<!-- login.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Login</title>
+</head>
+<body>
+  <h1>Login</h1>
+  <form id="login-form">
+    <input type="text" id="username" placeholder="Username" required />
+    <button type="submit">Log In</button>
+  </form>
+
+  <script>
+    document.getElementById('login-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const username = document.getElementById('username').value;
+      // You can implement user authentication here (e.g., send a request to a server)
+      // After successful authentication, redirect to the chat page.
+      window.location.href = `chat.html?username=${username}`;
+    });
+  </script>
+</body>
+</html>

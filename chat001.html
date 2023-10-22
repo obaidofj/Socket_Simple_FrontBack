@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Chat Room</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      height: 90vh;
+      width:600px;
+      
+    }
+
+    #chat-container {
+      flex: 1;
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      background-color: #f8f8f8;
+      overflow: auto;
+    }
+
+    #message-input-container {
+      display: flex;
+      padding: 10px;
+      background-color: #fff;
+      border-top: 1px solid #ccc;
+    }
+
+    #message-input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    #send-button {
+      margin-left: 10px;
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Welcome to the Chat Room</h1>
+  <div id="chat-container">
+    <ul id="message-list"></ul>
+  </div>
+  <div id="message-input-container">
+    <input type="text" id="message-input" placeholder="Type your message..." />
+    <button type="button" id="send-button">Send</button>
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const username = urlParams.get('username');
+    const messageList = document.getElementById('message-list');
+    const messageInput = document.getElementById('message-input');
+    const sendButton = document.getElementById('send-button');
+
+    messageInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        sendMessage();
+      }
+    });
+
+    sendButton.addEventListener('click', sendMessage);
+
+    function sendMessage() {
+      const message = messageInput.value;
+      if (message.trim() !== '') {
+        const listItem = document.createElement('li');
+        listItem.textContent = `${username}: ${message}`;
+        messageList.appendChild(listItem);
+        messageInput.value = '';
+
+        // Scroll to the latest message
+        messageList.scrollTop = messageList.scrollHeight;
+      }
+    }
+  </script>
+</body>
+</html>
