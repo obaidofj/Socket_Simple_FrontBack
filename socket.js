@@ -5,7 +5,7 @@ const app = express();
 // Create a new Socket.io server
 const http = require('http');
 const server = http.createServer(app);
-const io = require('socket.io')(server);
+const io = require('socket.io')(server, { transports: ['websocket'] });
 
 // Create a list to store connected users
 const users = [];

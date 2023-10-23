@@ -63,11 +63,11 @@
 
   <script>
     // Connect to the Socket.io server
-    const socket = io("ws://127.0.0.1:5000", {
+    const socket = io("ws://localhost:5000", {
       transports: ['websocket'],
-      query: {
-    token: `${getCookie('token')}`,
-  },
+    //   query: {
+    // token: `${getCookie('token')}`,
+  // },
   // Include the token in the headers
   transportOptions: {
     polling: {
@@ -100,12 +100,12 @@ console.log(getCookie('token'));
       const message = messageInput.value;
       if (message.trim() !== '') {
         const listItem = document.createElement('li');
-        listItem.textContent = `${username}: ${message}`;
-        messageList.appendChild(listItem);
-        messageInput.value = '';
+        // listItem.textContent = `${username}: ${message}`;
+        // messageList.appendChild(listItem);
+        // messageInput.value = '';
   
         // Emit the message to the server using Socket.io
-        socket.emit('message', {  sender : username, receiver:'obaid2',text:message });
+        socket.emit('message', `${username}: ${message}`); //{  sender : username, receiver:'obaid2',text:message });
         
         // Scroll to the latest message
         messageList.scrollTop = messageList.scrollHeight;
