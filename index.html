@@ -102,8 +102,8 @@
         .then((data) => {
           if (data.token) {
             // Authentication succeeded, redirect to the chat page
-            //window.location.href = `test.html?username=${username}`;
-            console.log(getCookie('token'));
+            window.location.href = `chat.html?username=${username}`;
+            // console.log(getCookie('token'));
 
           } else {
             // Authentication failed, display the error message
