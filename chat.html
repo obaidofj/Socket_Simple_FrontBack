@@ -53,9 +53,13 @@
 </head>
 <body>
   <h1>Welcome to the Chat Room</h1>
-  <div id="chat-container">
+  <div id="main-container"><div id="chat-container">
     <ul id="message-list"></ul>
   </div>
+  <div id="user-list-container">
+    <!-- Your user list content here -->
+  </div>
+</div>
   <div id="message-input-container">
     <input type="text" id="message-input" placeholder="Type your message..." />
     <button type="button" id="send-button">Send</button>
@@ -99,25 +103,48 @@ console.log(getCookie('token'));
     function sendMessage() {
       const message = messageInput.value;
       if (message.trim() !== '') {
-        const listItem = document.createElement('li');
+        // const listItem = document.createElement('li');
         // listItem.textContent = `${username}: ${message}`;
         // messageList.appendChild(listItem);
         // messageInput.value = '';
   
         // Emit the message to the server using Socket.io
-        socket.emit('message', `${username}: ${message}`); //{  sender : username, receiver:'obaid2',text:message });
+        // socket.emit('message', `${username}: ${message}`); //{  sender : username, receiver:'obaid2',text:message });
         
         // Scroll to the latest message
-        messageList.scrollTop = messageList.scrollHeight;
+    //     messageList.scrollTop = messageList.scrollHeight;
+    
+    fetch('http://localhost:5000/messege', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ senderId:2, receiverId:3, text:message }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.info === 'Message sent successfully') {
+          socket.emit('message', `${username}: ${message}`);
+        }
+      })
+      .catch((error) => {
+        console.error('An error occurred:', error);
+      });
+
+
       }
     }
   
     // Listen for messages from the server
     socket.on('message', (message) => {
       // Add the received message to the chat window
-      const listItem = document.createElement('li');
-      listItem.textContent = message;
-      messageList.appendChild(listItem);
+   // Display the message in the chat window
+   const listItem = document.createElement('li');
+          listItem.textContent = message;
+          messageList.appendChild(listItem);
+
+          // Clear the message input
+          messageInput.value = '';
       
       // Scroll to the latest message
       messageList.scrollTop = messageList.scrollHeight;
