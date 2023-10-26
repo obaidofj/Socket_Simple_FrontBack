@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Image Display</title>
+</head>
+<body>
+    <h1>Image Display</h1>
+    <div id="image-container"></div>
+<img src="http://localhost:5000/uploads/1697886395258-11.jpg" />
+    
+</body>
+<script >
+document.addEventListener('DOMContentLoaded', () => {
+    const imageContainer = document.getElementById('image-container');
+    
+    // Replace this with the actual URL of your image
+    const imageUrl = 'http://localhost:5000/file/1698310947434-11.jpg';
+
+    fetch(imageUrl)
+        .then(response => response.blob()) // Get the image data as a blob
+        .then(blob => {
+            // Create an img element to display the image
+            const image = document.createElement('img');
+            image.src = URL.createObjectURL(blob);
+            image.alt = 'Image';
+            
+            // Append the image to the container
+            imageContainer.appendChild(image);
+        })
+        .catch(error => {
+            console.error(error);
+            // Handle errors here
+        });
+});
+
+
+</script>
+</html>
+

@@ -14,27 +14,37 @@
 
     #main-chat-container {
       display: flex;
-      justify-content: space-between;
-      width: 80%; /* Adjusted to 80% */
+      min-height: 80%;
+      justify-content: center;
+      width: 85%; /* Adjusted to 80% */
+    }
+    
+    #separator-div {
+      width:10px;
+    }
+
+    #v-separator-div {
+      height: 4px;
     }
 
     #chat-container {
-      width: 60%; /* Adjusted to 60% */
+      width: 54%; /* Adjusted to 60% */
       min-width: 400px; /* Minimum width set to 400px */
       padding: 15px;
       border: 1px solid #ccc;
       border-radius: 5px;
       background-color: #f8f8f8;
       overflow: auto;
+
     }
 
     #user-list-container {
-      width: 20%; /* Adjusted to 20% */
-      min-width: 200px; /* Minimum width set to 200px */
+      width: 12%; /* Adjusted to 20% */
+      min-width: 100px; /* Minimum width set to 200px */
       padding: 15px;
       border: 1px solid #ccc;
       border-radius: 5px;
-      background-color: #f8f8f8;
+      background-color: #d1e9f0;
       overflow: auto; /* To enable scrolling if the user list is long */
     }
 
@@ -44,8 +54,9 @@
       display: flex;
       padding: 10px;
       background-color: #fff;
-      border-top: 1px solid #ccc;
-      align-items: center; /* To vertically center contents */
+      /* border-top: 1px solid #ccc; */
+      align-items: flex-start; /* To vertically center contents */
+      
     }
 
     #message-input {
@@ -53,6 +64,7 @@
       padding: 10px;
       border: 1px solid #ccc;
       border-radius: 5px;
+      height: 30px;
     }
 
     #send-button {
@@ -63,30 +75,43 @@
       border: none;
       border-radius: 5px;
       cursor: pointer;
+      width: 70px;
     }
 
     #attach-button {
       padding: 10px 20px;
-      background-color: #ccc;
+      background-color: #007bff;
       color: #fff;
       border: none;
       border-radius: 5px;
       cursor: pointer;
+    }
+
+    #input-aside{
+      width: 18%; /* Adjusted to 20% */
+      min-width: 190px; /* Minimum width set to 200px */
+      padding: 15px;
     }
   </style>
 </head>
 <body>
   <h1>Welcome to the Chat Room</h1>
   <div id="main-chat-container">
+
+  
+  <div id="user-list-container">
+    <!-- Your user list content here -->
+  </div>
+  <div id="separator-div"></div>
+  
     <div id="chat-container">
       <ul id="message-list"></ul>
-    </div>
-    <div id="user-list-container">
-      <!-- Your user list content here -->
-    </div>
+    </div>  
   </div>
+  <div id="v-separator-div"></div>
   <div id="message-input-container">
-    <input type="text" id="message-input" placeholder="Type your message..." />
+    <div id="input-aside"></div>
+    <textarea id="message-input" placeholder="Type your message..." ></textarea> &nbsp;&nbsp;
     <button type="button" id="attach-button">...</button>
     <button type="button" id="send-button">Send</button>
   </div>

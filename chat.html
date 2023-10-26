@@ -1,175 +1,359 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>Chat Room</title>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-
-    #chat-container {
-      flex: 1;
-      width: 80%;
-      max-height: 70%;
-      padding: -15px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      background-color: #f8f8f8;
-      overflow: auto;
-    }
-
-    #message-input-container {
-      width: 80%;
-      display: flex;
-      padding: 10px;
-      background-color: #fff;
-      border-top: 1px solid #ccc;
-    }
-
-    #message-input {
-      flex: 1;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-
-    #send-button {
-      margin-left: 10px;
-      padding: 10px 20px;
-      background-color: #007bff;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-  </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
-</head>
-<body>
-  <h1>Welcome to the Chat Room</h1>
-  <div id="chat-container">
-    <ul id="message-list"></ul>
-  </div>
-  <div id="message-input-container">
-    <input type="text" id="message-input" placeholder="Type your message..." />
-    <button type="button" id="send-button">Send</button>
-  </div>
-  <script>
-    // Connect to the Socket.io server
-    const socket = io("ws://localhost:5000", {
-      transports: ['websocket'],
-    //   query: {
-    // token: `${getCookie('token')}`,
-  // },
-  // Include the token in the headers
-  transportOptions: {
-    polling: {
-      extraHeaders: {
-        'authorization': `Bearer ${getCookie('token')}`, // Replace 'getCookie' with your actual cookie retrieval function
-      },
-    },
-  },
-}); // Update the server URL to match your configuration
-  
-console.log(getCookie('token'));
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const username = urlParams.get('username');
-    const messageList = document.getElementById('message-list');
-    const messageInput = document.getElementById('message-input');
-    const sendButton = document.getElementById('send-button');
-  
-    socket.emit('userConnected', {  username: username });
-
-    messageInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        sendMessage();
+  <head>
+    <title>Chat Room</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        height: 100vh;
       }
-    });
-  
-    sendButton.addEventListener('click', sendMessage);
-  
-    function sendMessage() {
-      const message = messageInput.value;
-      if (message.trim() !== '') {
-        // const listItem = document.createElement('li');
-        // listItem.textContent = `${username}: ${message}`;
-        // messageList.appendChild(listItem);
-        // messageInput.value = '';
-  
-        // Emit the message to the server using Socket.io
 
-        // socket.emit('message', `${username}: ${message}`); //{  sender : username, receiver:'obaid2',text:message });
-        
-        // Scroll to the latest message
-    //     messageList.scrollTop = messageList.scrollHeight;
-    
-    fetch('http://localhost:5000/messege', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ senderId:2, receiverId:3, text:message }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.info === 'Message sent successfully') {
-          socket.emit('message', `${username}: ${message}`);
+      #main-chat-container {
+        display: flex;
+        min-height: 80%;
+        justify-content: center;
+        width: 95%; /* Adjusted to 80% */
+      }
+
+      #separator-div {
+        width: 10px;
+      }
+
+      #v-separator-div {
+        height: 4px;
+      }
+
+      #chat-container {
+        width: 54%; /* Adjusted to 60% */
+        min-width: 400px; /* Minimum width set to 400px */
+        padding: 15px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background-color: #f8f8f8;
+        overflow: auto;
+      }
+
+      #user-list-container {
+        width: 12%; /* Adjusted to 20% */
+        min-width: 100px; /* Minimum width set to 200px */
+        padding: 15px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background-color: #d1e9f0;
+        overflow: auto; /* To enable scrolling if the user list is long */
+      }
+
+      #message-input-container {
+        width: 70%; /* Adjusted to 70% */
+        min-width: 400px; /* Minimum width set to 400px */
+        display: flex;
+        padding: 10px;
+        background-color: #fff;
+        /* border-top: 1px solid #ccc; */
+        align-items: flex-start; /* To vertically center contents */
+      }
+
+      #message-input {
+        flex: 1;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        height: 30px;
+      }
+
+      #send-button {
+        margin-left: 10px;
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        width: 70px;
+      }
+
+      #attach-button {
+        padding: 10px 10px;
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        width: 30px;
+      }
+
+      #input-aside {
+        width: 19.5%; /* Adjusted to 20% */
+        min-width: 190px; /* Minimum width set to 200px */
+        padding: 15px;
+      }
+
+      .dots-button {
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        width: 40px; /* Adjust the width as needed */
+      }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+  </head>
+  <body>
+    <h1>Welcome to the Chat ...</h1>
+    <div id="main-chat-container">
+      <div id="user-list-container">
+        <!-- Your user list content here -->
+      </div>
+      <div id="separator-div"></div>
+
+      <div id="chat-container">
+        <ul id="message-list"></ul>
+      </div>
+    </div>
+    <div id="v-separator-div"></div>
+    <div id="message-input-container">
+      <div id="input-aside"></div>
+      <textarea
+        id="message-input"
+        placeholder="Type your message..."
+      ></textarea>
+      &nbsp;&nbsp;
+      <button type="button" id="attach-button" class="dots-button">...</button>
+      <button type="button" id="send-button">Send</button>
+    </div>
+    <input type="file" id="fileInput" multiple style="display: none" />
+    <script>
+      // Connect to the Socket.io server
+      const socket = io("ws://localhost:5000", {
+        transports: ["websocket"],
+        //   query: {
+        // token: `${getCookie('token')}`,
+        // },
+        // Include the token in the headers
+        transportOptions: {
+          polling: {
+            extraHeaders: {
+              authorization: `Bearer ${getCookie("token")}` // Replace 'getCookie' with your actual cookie retrieval function
+            }
+          }
         }
-      })
-      .catch((error) => {
-        console.error('An error occurred:', error);
+      }); // Update the server URL to match your configuration
+
+      console.log(getCookie("token"));
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const username = urlParams.get("username");
+      const messageList = document.getElementById("message-list");
+      const messageInput = document.getElementById("message-input");
+      const sendButton = document.getElementById("send-button");
+      const attachButton = document.getElementById("attach-button");
+      const formData = new FormData();
+
+      socket.emit("userConnected", { username: username });
+
+      messageInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+          sendMessage();
+        }
       });
 
+      // Add an event listener to handle the button click and trigger file selection
+      attachButton.addEventListener("click", () => {
+        fileInput.click();
+      });
 
+      fileInput.addEventListener("change", () => {
+        const selectedFiles = fileInput.files;
 
+        // Create a FormData object and append the selected files to it
+
+        for (let i = 0; i < selectedFiles.length; i++) {
+          formData.append("files", selectedFiles[i]);
+          
+        }
+        // console.log(selectedFiles);
+        sendMessage();
+        // Send a POST request to the server to upload the selected files
+        // fetch("/upload", {
+        //   method: "POST",
+        //   body: formData,
+        // })
+        //   .then((response) => {
+        //     if (response.ok) {
+        //       // Handle a successful file upload
+        //       console.log("Files uploaded successfully.");
+        //     } else {
+        //       // Handle an error during file upload
+        //       console.error("File upload failed.");
+        //     }
+        //   })
+        //   .catch((error) => {
+        //     // Handle network or fetch-related errors
+        //     console.error("Fetch error:", error);
+        //   });
+      });
+
+      sendButton.addEventListener("click", sendMessage);
+
+      function sendMessage() {
+        const message = messageInput.value;
+
+        if (message.trim() !== "" || formData.has('files') ) {
+          // const listItem = document.createElement('li');
+          // listItem.textContent = `${username}: ${message}`;
+          // messageList.appendChild(listItem);
+          // messageInput.value = '';
+// console.log("in");
+          // Emit the message to the server using Socket.io
+
+          // socket.emit('message', `${username}: ${message}`); //{  sender : username, receiver:'obaid2',text:message });
+
+          // Scroll to the latest message
+          //     messageList.scrollTop = messageList.scrollHeight;
+
+          // const jsonString = JSON.stringify({
+          //   senderId: 2,
+          //   receiverId: 3,
+          //   text: message
+          // });
+          // formData.append("json_data", jsonString);
+          formData.append('senderId', '2');
+          formData.append('receiverId','3');
+          formData.append('text', message );
+
+          fetch("http://localhost:5000/messege", {
+            method: "POST",
+            // headers: {
+            //   'Content-Type': 'application/json',
+            // },
+            body: formData
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.info === "Message sent successfully") {
+                // console.log(data.message.attachmentsUrls);
+                if (data.message.attachmentsUrls) {
+                  data.message.attachmentsUrls.forEach((file) => {
+                    if (isImageFile(file)) {
+
+                      showImg("http://localhost:5000/file/" + file);
+                      // Display images using an img tag
+                   
+
+                      // Clear the message input
+                      // messageInput.value = "";
+                    } else {
+                      // Display file names for non-images
+                      const fileName = document.createElement("p");
+                      fileName.textContent = file.name;
+                      // fileList.appendChild(fileName);
+
+                      const listItem = document.createElement("li");
+                      listItem.textContent = file.name;
+                      messageList.appendChild(listItem);
+
+                      // Clear the message input
+                      
+                    }
+                  });
+                }
+                socket.emit("message", `${username}: ${message}`);
+                messageInput.value = "";
+              }
+            })
+            .catch((error) => {
+              console.error("An error occurred:", error);
+            });
+        }
       }
-    }
-  
-    // Listen for messages from the server
-    socket.on('message', (message) => {
-      // Add the received message to the chat window
 
-   // Display the message in the chat window
-   const listItem = document.createElement('li');
-          listItem.textContent = message;
-          messageList.appendChild(listItem);
+      // Listen for messages from the server
+      socket.on("message", (message) => {
+        // Add the received message to the chat window
 
-          // Clear the message input
-          messageInput.value = '';
+        // Display the message in the chat window
+        const listItem = document.createElement("li");
+        listItem.textContent = message;
+        messageList.appendChild(listItem);
 
-      
-      // Scroll to the latest message
-      messageList.scrollTop = messageList.scrollHeight;
-    });
+        // Clear the message input
+        messageInput.value = "";
 
-    function getCookie(name) {
-  // Split all cookies into an array of key-value pairs
-  const cookies = document.cookie.split(';');
+        // Scroll to the latest message
+        messageList.scrollTop = messageList.scrollHeight;
+      });
 
-  // Iterate through cookies to find the one with the specified name
-  for (let i = 0; i < cookies.length; i++) {
-    const cookie = cookies[i].trim();
+      function getCookie(name) {
+        // Split all cookies into an array of key-value pairs
+        const cookies = document.cookie.split(";");
 
-    // Check if the cookie name matches the requested name
-    if (cookie.startsWith(name + '=')) {
-      // Return the cookie's value (decode it to handle special characters)
-      return decodeURIComponent(cookie.substring(name.length + 1));
-    }
-  }
+        // Iterate through cookies to find the one with the specified name
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
 
-  // Return null if the cookie with the specified name is not found
-  return null;
+          // Check if the cookie name matches the requested name
+          if (cookie.startsWith(name + "=")) {
+            // Return the cookie's value (decode it to handle special characters)
+            return decodeURIComponent(cookie.substring(name.length + 1));
+          }
+        }
+
+        // Return null if the cookie with the specified name is not found
+        return null;
+      }
+
+      function isImageFile(fileName) {
+        // List of common image file extensions
+        const imageExtensions = [
+          ".jpg",
+          ".jpeg",
+          ".png",
+          ".gif",
+          ".bmp",
+          ".svg"
+        ];
+
+        // Get the file extension from the file name
+        const fileExtension = fileName
+          .toLowerCase()
+          .slice(((fileName.lastIndexOf(".") - 1) >>> 0) + 2);
+
+        // Check if the file extension is in the list of image extensions
+        return imageExtensions.includes("." + fileExtension);
+      }
+    
+function showImg(imageUrl) {
+  fetch(imageUrl)
+        .then(response => response.blob()) // Get the image data as a blob
+        .then(blob => {
+            // Create an img element to display the image
+            const image = document.createElement('img');
+            image.src = URL.createObjectURL(blob);
+            image.alt = 'Image';
+            
+            // Append the image to the container
+            // imageContainer.appendChild(image);
+
+            const img = document.createElement("img");
+                      img.src = imageUrl;
+                      img.alt = "Image";
+                      // fileList.appendChild(img);
+
+                      const listItem = document.createElement("li");
+                      listItem.appendChild(img);
+                      messageList.appendChild(listItem);
+        })
+        .catch(error => {
+            console.error(error);
+            // Handle errors here
+        });
 }
 
-
-  </script>
-  
-</body>
+    </script>
+  </body>
 </html>
