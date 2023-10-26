@@ -76,7 +76,7 @@
   transportOptions: {
     polling: {
       extraHeaders: {
-        'authorization': `${getCookie('token')}`, // Replace 'getCookie' with your actual cookie retrieval function
+        'authorization': `Bearer ${getCookie('token')}`, // Replace 'getCookie' with your actual cookie retrieval function
       },
     },
   },
@@ -109,6 +109,7 @@ console.log(getCookie('token'));
         // messageInput.value = '';
   
         // Emit the message to the server using Socket.io
+
         // socket.emit('message', `${username}: ${message}`); //{  sender : username, receiver:'obaid2',text:message });
         
         // Scroll to the latest message
@@ -132,12 +133,14 @@ console.log(getCookie('token'));
       });
 
 
+
       }
     }
   
     // Listen for messages from the server
     socket.on('message', (message) => {
       // Add the received message to the chat window
+
    // Display the message in the chat window
    const listItem = document.createElement('li');
           listItem.textContent = message;
@@ -145,6 +148,7 @@ console.log(getCookie('token'));
 
           // Clear the message input
           messageInput.value = '';
+
       
       // Scroll to the latest message
       messageList.scrollTop = messageList.scrollHeight;
