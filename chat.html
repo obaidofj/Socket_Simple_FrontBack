@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Chat Room</title>
-    <style>
+    <head>
+        <title>Chat Room</title>
+        <style>
       body {
         margin: 0;
         padding: 0;
@@ -100,34 +100,34 @@
         text-align: center;
         width: 40px; /* Adjust the width as needed */
       }
-    </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
-  </head>
-  <body>
-    <h1>Welcome to the Chat ...</h1>
-    <div id="main-chat-container">
-      <div id="user-list-container">
-        <!-- Your user list content here -->
-      </div>
-      <div id="separator-div"></div>
-
-      <div id="chat-container">
-        <ul id="message-list"></ul>
-      </div>
-    </div>
-    <div id="v-separator-div"></div>
-    <div id="message-input-container">
-      <div id="input-aside"></div>
-      <textarea
-        id="message-input"
-        placeholder="Type your message..."
-      ></textarea>
-      &nbsp;&nbsp;
-      <button type="button" id="attach-button" class="dots-button">...</button>
-      <button type="button" id="send-button">Send</button>
-    </div>
-    <input type="file" id="fileInput" multiple style="display: none" />
-    <script>
+        </style>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+    </head>
+    <body>
+        <h1>Welcome to the Chat ...</h1>
+        <div id="main-chat-container">
+            <div id="user-list-container">
+                <!-- Your user list content here --></div>
+            <div id="separator-div"></div>
+            <div id="chat-container">
+                <ul id="message-list"></ul>
+            </div>
+        </div>
+        <div id="v-separator-div"></div>
+        <div id="message-input-container">
+            <div id="input-aside"></div>
+            <textarea id="message-input" placeholder="Type your message..."></textarea>
+            &nbsp;&nbsp;
+            <button type="button" id="attach-button" class="dots-button">...</button>
+            <button type="button" id="send-button">Send</button>
+        </div>
+        <input
+            type="file"
+            id="fileInput"
+            multiple
+            style="display: none"
+        >
+        <script>
       // Connect to the Socket.io server
       const socket = io("ws://localhost:5000", {
         transports: ["websocket"],
@@ -144,7 +144,7 @@
         }
       }); // Update the server URL to match your configuration
 
-      console.log(getCookie("token"));
+      // console.log(getCookie("token"));
 
       const urlParams = new URLSearchParams(window.location.search);
       const username = urlParams.get("username");
@@ -152,7 +152,7 @@
       const messageInput = document.getElementById("message-input");
       const sendButton = document.getElementById("send-button");
       const attachButton = document.getElementById("attach-button");
-      const formData = new FormData();
+      
 
       socket.emit("userConnected", { username: username });
 
@@ -166,107 +166,46 @@
       attachButton.addEventListener("click", () => {
         fileInput.click();
       });
-
-      fileInput.addEventListener("change", () => {
-        const selectedFiles = fileInput.files;
-
-        // Create a FormData object and append the selected files to it
-
-        for (let i = 0; i < selectedFiles.length; i++) {
-          formData.append("files", selectedFiles[i]);
-          
-        }
-        // console.log(selectedFiles);
+      
+      //add event to listen when the files selected form browseing
+      fileInput.addEventListener("change", () => { 
         sendMessage();
-        // Send a POST request to the server to upload the selected files
-        // fetch("/upload", {
-        //   method: "POST",
-        //   body: formData,
-        // })
-        //   .then((response) => {
-        //     if (response.ok) {
-        //       // Handle a successful file upload
-        //       console.log("Files uploaded successfully.");
-        //     } else {
-        //       // Handle an error during file upload
-        //       console.error("File upload failed.");
-        //     }
-        //   })
-        //   .catch((error) => {
-        //     // Handle network or fetch-related errors
-        //     console.error("Fetch error:", error);
-        //   });
       });
-
+      
+      //add event to listen to click on sendmessege button click
       sendButton.addEventListener("click", sendMessage);
 
       function sendMessage() {
+        const selectedFiles = fileInput.files||[];
         const message = messageInput.value;
+         // Create a FormData object and append the selected files to it
+        const formData = new FormData();
+
+        for (let i = 0; i < selectedFiles.length; i++) {
+          formData.append("files", selectedFiles[i]);
+        }
 
         if (message.trim() !== "" || formData.has('files') ) {
-          // const listItem = document.createElement('li');
-          // listItem.textContent = `${username}: ${message}`;
-          // messageList.appendChild(listItem);
-          // messageInput.value = '';
-// console.log("in");
-          // Emit the message to the server using Socket.io
 
-          // socket.emit('message', `${username}: ${message}`); //{  sender : username, receiver:'obaid2',text:message });
-
-          // Scroll to the latest message
-          //     messageList.scrollTop = messageList.scrollHeight;
-
-          // const jsonString = JSON.stringify({
-          //   senderId: 2,
-          //   receiverId: 3,
-          //   text: message
-          // });
-          // formData.append("json_data", jsonString);
-          formData.append('senderId', '2');
-          formData.append('receiverId','3');
+          formData.append('senderId', '3');
+          formData.append('receiverId','4');
           formData.append('text', message );
 
-//           formData.forEach((value, key) => {
-//   console.log(`${key}: ${value}`);
-// });
+          // formData.forEach((value, key) => {
+          //   console.log(`${key}: ${value}`);
+          // });
 
-          fetch("http://localhost:5000/messege", {
+          fetch(`${host}/messege`, {
             method: "POST",
-            // headers: {
-            //   'Content-Type': 'application/json',
-            // },
-            body: formData
+            body: formData,
+            credentials: 'include', // Include cookies in the request
           })
             .then((response) => response.json())
             .then((data) => {
               if (data.info === "Message sent successfully") {
-                // console.log(data.message.attachmentsUrls);
-                if (data.message.attachmentsUrls) {
-                  data.message.attachmentsUrls.forEach((file) => {
-                    if (isImageFile(file)) {
-
-                      showImg("http://localhost:5000/file/" + file);
-                      // Display images using an img tag
-                   
-
-                      // Clear the message input
-                      // messageInput.value = "";
-                    } else {
-                      // Display file names for non-images
-                      const fileName = document.createElement("p");
-                      fileName.textContent = file.name;
-                      // fileList.appendChild(fileName);
-
-                      const listItem = document.createElement("li");
-                      listItem.textContent = file.name;
-                      messageList.appendChild(listItem);
-
-                      // Clear the message input
-                      
-                    }
-                  });
-                }
-                socket.emit("message", `${username}: ${message}`);
+                sourceSocket=true;
+                addMessegeWithAttachment(data,true,true);
+                socket.emit("message", serializedFormData);
                 messageInput.value = "";
               }
             })
@@ -277,20 +216,63 @@
       }
 
       // Listen for messages from the server
-      socket.on("message", (message) => {
-        // Add the received message to the chat window
+      socket.on("message", (data) => {
 
-        // Display the message in the chat window
-        const listItem = document.createElement("li");
-        listItem.textContent = message;
+        if(!sourceSocket){
+        addMessegeWithAttachment(data);
+        // Add the received message to the chat window        
+      }
+      });
+
+     function  addMessegeWithAttachment(data,Source=false,Sent=true){
+
+      // Display the message and attachments in the chat window
+
+      if(Source==true)
+      {
+      if (data.message.attachmentsUrls) {
+                  data.message.attachmentsUrls.forEach((file) => {
+                    if (isImageFile(file)) {
+
+                      showImg(`${host}/file/ + file`);
+                    } else {
+                      // Display file names for non-images
+                      const fileLink = document.createElement("a");
+                      // Set the link text (inner text)
+                      fileLink.innerText = "Download File"; // Change the text as needed
+
+                      // Set the href attribute (URL or file path)
+                    fileLink.href = "https://example.com/path-to-your-file"; // Change the URL or file path
+
+// Set the target attribute to open the link in a new tab (optional)
+fileLink.target = "_blank";
+
+// Append the link to the document, e.g., to a specific element with an ID
+const container = document.getElementById("container"); // Change "container" to your desired ID
+container.appendChild(fileLink);
+                      fileName.textContent = file.name;
+                      // fileList.appendChild(fileName);
+
+                      const listItem = document.createElement("li");
+                      listItem.textContent = file.name;
+                      messageList.appendChild(listItem);
+
+                      // Clear the message input
+                      
+                    }
+                  }
+                }
+              }
+       const listItem = document.createElement("li");
+        listItem.textContent = data.text;
         messageList.appendChild(listItem);
 
         // Clear the message input
         messageInput.value = "";
-
+      
         // Scroll to the latest message
         messageList.scrollTop = messageList.scrollHeight;
-      });
+     }
 
       function getCookie(name) {
         // Split all cookies into an array of key-value pairs
@@ -357,7 +339,6 @@ function showImg(imageUrl) {
             // Handle errors here
         });
 }
-
-    </script>
-  </body>
+        </script>
+    </body>
 </html>
