@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>Chat Room</title>
-        <style>
+  <head>
+    <title>Chat Room</title>
+    <style>
       body {
         margin: 0;
         padding: 0;
@@ -100,48 +100,39 @@
         text-align: center;
         width: 40px; /* Adjust the width as needed */
       }
-        </style>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
-    </head>
-    <body>
-        <h1>Welcome to the Chat ...</h1>
-        <div id="main-chat-container">
-            <div id="user-list-container">
-                <!-- Your user list content here --></div>
-            <div id="separator-div"></div>
-            <div id="chat-container">
-                <ul id="message-list"></ul>
-            </div>
-        </div>
-        <div id="v-separator-div"></div>
-        <div id="message-input-container">
-            <div id="input-aside"></div>
-            <textarea id="message-input" placeholder="Type your message..."></textarea>
-            &nbsp;&nbsp;
-            <button type="button" id="attach-button" class="dots-button">...</button>
-            <button type="button" id="send-button">Send</button>
-        </div>
-        <input
-            type="file"
-            id="fileInput"
-            multiple
-            style="display: none"
-        >
-        <script>
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+  </head>
+  <body>
+    <h1>Welcome to the Chat ...</h1>
+    <div id="main-chat-container">
+      <div id="user-list-container">
+        <!-- Your user list content here -->
+      </div>
+      <div id="separator-div"></div>
+      <div id="chat-container">
+        <ul id="message-list"></ul>
+      </div>
+    </div>
+    <div id="v-separator-div"></div>
+    <div id="message-input-container">
+      <div id="input-aside"></div>
+      <textarea
+        id="message-input"
+        placeholder="Type your message..."
+      ></textarea>
+      &nbsp;&nbsp;
+      <button type="button" id="attach-button" class="dots-button">...</button>
+      <button type="button" id="send-button">Send</button>
+    </div>
+    <input type="file" id="fileInput" multiple style="display: none" />
+    <script>
+      const host = "http://127.0.0.1:5000";
+
       // Connect to the Socket.io server
-      const socket = io("ws://localhost:5000", {
+      const socket = io(`http://127.0.0.1:5000`, {
         transports: ["websocket"],
-        //   query: {
-        // token: `${getCookie('token')}`,
-        // },
-        // Include the token in the headers
-        transportOptions: {
-          polling: {
-            extraHeaders: {
-              authorization: `Bearer ${getCookie("token")}` // Replace 'getCookie' with your actual cookie retrieval function
-            }
-          }
-        }
+        credentials: "include",
       }); // Update the server URL to match your configuration
 
       // console.log(getCookie("token"));
@@ -152,7 +143,7 @@
       const messageInput = document.getElementById("message-input");
       const sendButton = document.getElementById("send-button");
       const attachButton = document.getElementById("attach-button");
-      
+      let sourceSocket=false;
 
       socket.emit("userConnected", { username: username });
 
@@ -166,113 +157,146 @@
       attachButton.addEventListener("click", () => {
         fileInput.click();
       });
-      
+
       //add event to listen when the files selected form browseing
-      fileInput.addEventListener("change", () => { 
+      fileInput.addEventListener("change", () => {
         sendMessage();
+         fileInput.value='';
       });
-      
+
       //add event to listen to click on sendmessege button click
       sendButton.addEventListener("click", sendMessage);
 
       function sendMessage() {
-        const selectedFiles = fileInput.files||[];
+
+        const selectedFiles = fileInput.files || [];
+        // console.log("selectedFiles:",selectedFiles);
         const message = messageInput.value;
-         // Create a FormData object and append the selected files to it
+        // Create a FormData object and append the selected files to it
         const formData = new FormData();
+        const serializedFormData = {};
 
         for (let i = 0; i < selectedFiles.length; i++) {
           formData.append("files", selectedFiles[i]);
         }
 
-        if (message.trim() !== "" || formData.has('files') ) {
-
-          formData.append('senderId', '3');
-          formData.append('receiverId','4');
-          formData.append('text', message );
+        if (message.trim() !== "" || formData.has("files")) {
+          formData.append("senderId", 2);
+          formData.append("receiverId", 3);
+          formData.append("text", message);
 
           // formData.forEach((value, key) => {
           //   console.log(`${key}: ${value}`);
           // });
 
+          formData.forEach((value, key) => {
+            serializedFormData[key] = value;
+          });
+          
+          // console.log(serializedFormData);
+
           fetch(`${host}/messege`, {
             method: "POST",
             body: formData,
-            credentials: 'include', // Include cookies in the request
+            credentials: "include" // Include cookies in the request
           })
             .then((response) => response.json())
             .then((data) => {
               if (data.info === "Message sent successfully") {
-                sourceSocket=true;
-                addMessegeWithAttachment(data,true,true);
+                sourceSocket = true;
+                addMessegeWithAttachment(data.message.attachmentsUrls,data.message.text,  true);
+                data.message.attachmentsUrls='';
+                messageInput.value = "";
+                console.log("serializedFormData",serializedFormData);
                 socket.emit("message", serializedFormData);
+              } else {
+                sourceSocket = true;
+                addMessegeWithAttachment(data.message.attachmentsUrls,data.message.text,  false);
+                data.message.attachmentsUrls='';
                 messageInput.value = "";
               }
             })
             .catch((error) => {
-              console.error("An error occurred:", error);
+              console.log("An error occurred:", error);
             });
         }
+        
       }
 
       // Listen for messages from the server
       socket.on("message", (data) => {
+        console.log("data:",JSON.stringify( data));
+        if (sourceSocket===false) {
+          console.log("inside on messeg 2",data);
+          // Add the received message to the chat window
+          // const filesArray = data.map((item) => item.files);
+          const files = getValuesByKey(data,"files")
+          addMessegeWithAttachment(files,data.text);
+                       
 
-        if(!sourceSocket){
-        addMessegeWithAttachment(data);
-        // Add the received message to the chat window        
-      }
+        } 
+        sourceSocket=false;
       });
 
-     function  addMessegeWithAttachment(data,Source=false,Sent=true){
-
       // Display the message and attachments in the chat window
+      function addMessegeWithAttachment(files, text,  Sent = true) {
+       
+        if (files.length!==0) {
+            // files = data.message.attachmentsUrls;
+            showAttachments(files, Sent);
+        }
 
-      if(Source==true)
-      {
-      if (data.message.attachmentsUrls) {
-                  data.message.attachmentsUrls.forEach((file) => {
-                    if (isImageFile(file)) {
-
-                      showImg(`${host}/file/ + file`);
-                    } else {
-                      // Display file names for non-images
-                      const fileLink = document.createElement("a");
-                      // Set the link text (inner text)
-                      fileLink.innerText = "Download File"; // Change the text as needed
-
-                      // Set the href attribute (URL or file path)
-                    fileLink.href = "https://example.com/path-to-your-file"; // Change the URL or file path
-
-// Set the target attribute to open the link in a new tab (optional)
-fileLink.target = "_blank";
-
-// Append the link to the document, e.g., to a specific element with an ID
-const container = document.getElementById("container"); // Change "container" to your desired ID
-container.appendChild(fileLink);
-                      fileName.textContent = file.name;
-                      // fileList.appendChild(fileName);
-
-                      const listItem = document.createElement("li");
-                      listItem.textContent = file.name;
-                      messageList.appendChild(listItem);
-
-                      // Clear the message input
-                      
-                    }
-                  }
-                }
-              }
-       const listItem = document.createElement("li");
-        listItem.textContent = data.text;
+        const listItem = document.createElement("li");
+        listItem.textContent = text;
+         if(Sent===false)
+            {
+              //add small button to resend and make red color
+            }
         messageList.appendChild(listItem);
 
         // Clear the message input
         messageInput.value = "";
-      
+
         // Scroll to the latest message
         messageList.scrollTop = messageList.scrollHeight;
-     }
+        Source = false;
+      }
+
+      function showAttachments(files, Sent = true) {
+
+        files.forEach((file) => {
+          if (isImageFile(file)) {
+            showImg(`${host}/file/${file}`);
+          } else {
+            // Display file link and names for non-images
+            const fileLink = document.createElement("a");
+            // Set the link text (inner text)
+            fileLink.innerText = file; // Change the text as needed
+
+            // Set the href attribute (URL or file path)
+            fileLink.href = `${host}/file/${file}`;
+
+            // target attribute to open the link in a new tab
+            fileLink.target = "_blank";
+
+            // Append the link to the document, e.g., to a specific element with an ID
+            // const container = document.getElementById("container");
+            // container.appendChild(fileLink);
+            //   fileName.textContent = file.name;
+            // fileList.appendChild(fileName);
+
+            const listItem = document.createElement("li");
+            listItem.textContent = file;
+            if(Sent===false)
+            {
+              //add small button to resend and make red color
+            }
+            listItem.appendChild(fileLink);
+            messageList.appendChild(listItem);
+            messageList.scrollTop = messageList.scrollHeight;
+          }
+        });
+      }
 
       function getCookie(name) {
         // Split all cookies into an array of key-value pairs
@@ -293,6 +317,8 @@ container.appendChild(fileLink);
         return null;
       }
 
+ 
+
       function isImageFile(fileName) {
         // List of common image file extensions
         const imageExtensions = [
@@ -312,33 +338,52 @@ container.appendChild(fileLink);
         // Check if the file extension is in the list of image extensions
         return imageExtensions.includes("." + fileExtension);
       }
-    
-function showImg(imageUrl) {
-  fetch(imageUrl)
-        .then(response => response.blob()) // Get the image data as a blob
-        .then(blob => {
+
+      function showImg(imageUrl) {
+        fetch(imageUrl,{
+            method: "GET",
+            credentials: "include" // Include cookies in the request
+          })
+          .then((response) => response.blob()) // Get the image data as a blob
+          .then((blob) => {
             // Create an img element to display the image
-            const image = document.createElement('img');
+            const image = document.createElement("img");
             image.src = URL.createObjectURL(blob);
-            image.alt = 'Image';
-            
+            image.alt = "Image";
+
             // Append the image to the container
             // imageContainer.appendChild(image);
 
             const img = document.createElement("img");
-                      img.src = imageUrl;
-                      img.alt = "Image";
-                      // fileList.appendChild(img);
+            img.src = imageUrl;
+            img.alt = "Image";
+            // fileList.appendChild(img);
 
-                      const listItem = document.createElement("li");
-                      listItem.appendChild(img);
-                      messageList.appendChild(listItem);
-        })
-        .catch(error => {
+            const listItem = document.createElement("li");
+            listItem.appendChild(img);
+            messageList.appendChild(listItem);
+          })
+          .catch((error) => {
             console.error(error);
             // Handle errors here
-        });
+          });
+      }
+
+      function getValuesByKey(obj, key) {
+    const values = [];
+
+    for (const prop in obj) {
+        if (prop === key) {
+            // if (Array.isArray(obj[prop])) {
+            //     values.push(...obj[prop]);
+            // } else {
+                values.push(obj[prop]);
+            // }
+        }
+    }
+
+    return values;
 }
-        </script>
-    </body>
+    </script>
+  </body>
 </html>

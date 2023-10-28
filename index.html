@@ -90,7 +90,7 @@
       const password = passwordInput.value;
 
       // Make a POST request to the server for authentication
-      fetch('http://localhost:5000/auth/login', {
+      fetch('http://127.0.0.1:5000/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -101,6 +101,7 @@
         .then((response) => response.json())
         .then((data) => {
           if (data.token) {
+            // console.log(data.token);
             // Authentication succeeded, redirect to the chat page
             window.location.href = `chat.html?username=${username}`;
             // console.log(getCookie('token'));
