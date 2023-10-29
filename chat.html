@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Chat Room</title>
-    <style>
+    <head>
+        <title>Chat Room</title>
+        <style>
       body {
         margin: 0;
         padding: 0;
@@ -100,33 +100,38 @@
         text-align: center;
         width: 40px; /* Adjust the width as needed */
       }
-    </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
-  </head>
-  <body>
-    <h1>Welcome to the Chat ...</h1>
-    <div id="main-chat-container">
-      <div id="user-list-container">
-        <!-- Your user list content here -->
-      </div>
-      <div id="separator-div"></div>
-      <div id="chat-container">
-        <ul id="message-list"></ul>
-      </div>
-    </div>
-    <div id="v-separator-div"></div>
-    <div id="message-input-container">
-      <div id="input-aside"></div>
-      <textarea
-        id="message-input"
-        placeholder="Type your message..."
-      ></textarea>
-      &nbsp;&nbsp;
-      <button type="button" id="attach-button" class="dots-button">...</button>
-      <button type="button" id="send-button">Send</button>
-    </div>
-    <input type="file" id="fileInput" multiple style="display: none" />
-    <script>
+
+      .no-bullet {
+        list-style: none;
+      }
+        </style>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+    </head>
+    <body>
+        <h1>Welcome to the Chat ...</h1>
+        <div id="main-chat-container">
+            <div id="user-list-container">
+                <!-- Your user list content here --></div>
+            <div id="separator-div"></div>
+            <div id="chat-container">
+                <ul id="message-list"></ul>
+            </div>
+        </div>
+        <div id="v-separator-div"></div>
+        <div id="message-input-container">
+            <div id="input-aside"></div>
+            <textarea id="message-input" placeholder="Type your message..."></textarea>
+            &nbsp;&nbsp;
+            <button type="button" id="attach-button" class="dots-button">...</button>
+            <button type="button" id="send-button">Send</button>
+        </div>
+        <input
+            type="file"
+            id="fileInput"
+            multiple
+            style="display: none"
+        >
+        <script>
       const host = "http://127.0.0.1:5000";
 
       // Connect to the Socket.io server
@@ -144,6 +149,9 @@
       const sendButton = document.getElementById("send-button");
       const attachButton = document.getElementById("attach-button");
       let sourceSocket=false;
+      let files=[];
+      let filesSelectedForUploading=[];
+      let messegeAndFiles={};
 
       socket.emit("userConnected", { username: username });
 
@@ -161,7 +169,8 @@
       //add event to listen when the files selected form browseing
       fileInput.addEventListener("change", () => {
         sendMessage();
-         fileInput.value='';
+        fileInput.value='';
+
       });
 
       //add event to listen to click on sendmessege button click
@@ -178,13 +187,15 @@
 
         for (let i = 0; i < selectedFiles.length; i++) {
           formData.append("files", selectedFiles[i]);
+          filesSelectedForUploading.push(selectedFiles[i].name);
         }
 
         if (message.trim() !== "" || formData.has("files")) {
-          formData.append("senderId", 2);
-          formData.append("receiverId", 3);
+          formData.append("senderId", 3);
+          formData.append("receiverId", 4);
           formData.append("text", message);
-
+           
+          
           // formData.forEach((value, key) => {
           //   console.log(`${key}: ${value}`);
           // });
@@ -194,6 +205,7 @@
           });
           
           // console.log(serializedFormData);
+          let msgData='';
 
           fetch(`${host}/messege`, {
             method: "POST",
@@ -204,18 +216,25 @@
             .then((data) => {
               if (data.info === "Message sent successfully") {
                 sourceSocket = true;
-                addMessegeWithAttachment(data.message.attachmentsUrls,data.message.text,  true);
+                files=data.message.attachmentsUrls;
+                console.log(data);
+                msgData={"text": data.message.text ,"username":data.sessionData.username,"userId":data.sessionData.userId};
+                messegeAndFiles={"text": data.message.text, "files":files ,"user":{"username":data.sessionData.username,"userId":data.sessionData.userId}};
+                // console.log("data.message.attachmentsUrls : ",data.message.attachmentsUrls);
+                addMessegeWithAttachment(files, msgData,  true);
                 data.message.attachmentsUrls='';
                 messageInput.value = "";
-                console.log("serializedFormData",serializedFormData);
-                socket.emit("message", serializedFormData);
+                console.log("serializedFormData",messegeAndFiles);
+                socket.emit("message", messegeAndFiles);
               } else {
                 sourceSocket = true;
-                addMessegeWithAttachment(data.message.attachmentsUrls,data.message.text,  false);
+                addMessegeWithAttachment(filesSelectedForUploading,msgData,  false);
                 data.message.attachmentsUrls='';
                 messageInput.value = "";
               }
-            })
+              files=[];
+            }
+            )
             .catch((error) => {
               console.log("An error occurred:", error);
             });
@@ -223,35 +242,37 @@
         
       }
 
+     
       // Listen for messages from the server
       socket.on("message", (data) => {
         console.log("data:",JSON.stringify( data));
         if (sourceSocket===false) {
-          console.log("inside on messeg 2",data);
+          // console.log("inside on messeg 2",data);
           // Add the received message to the chat window
-          // const filesArray = data.map((item) => item.files);
-          const files = getValuesByKey(data,"files")
-          addMessegeWithAttachment(files,data.text);
-                       
-
+          files=[];
+          if(data.files.length!==0){
+            data.files.forEach((el)=>{files.push(el)})
+          }
+          addMessegeWithAttachment(files,data);
         } 
         sourceSocket=false;
       });
 
       // Display the message and attachments in the chat window
-      function addMessegeWithAttachment(files, text,  Sent = true) {
+      function addMessegeWithAttachment(files, data,  Sent = true) {
        
         if (files.length!==0) {
             // files = data.message.attachmentsUrls;
-            showAttachments(files, Sent);
+            showAttachments(files,data.user, Sent);
         }
 
         const listItem = document.createElement("li");
-        listItem.textContent = text;
+        listItem.textContent = `${data.user.username}:${data.text}`;
          if(Sent===false)
             {
               //add small button to resend and make red color
             }
+        listItem.classList.add("no-bullet");
         messageList.appendChild(listItem);
 
         // Clear the message input
@@ -262,11 +283,11 @@
         Source = false;
       }
 
-      function showAttachments(files, Sent = true) {
-
+      function showAttachments(files, userData, Sent = true) {
+// console.log("userData",userData);return;
         files.forEach((file) => {
           if (isImageFile(file)) {
-            showImg(`${host}/file/${file}`);
+            showImg(`${host}/file/${file}`,userData);
           } else {
             // Display file link and names for non-images
             const fileLink = document.createElement("a");
@@ -286,11 +307,12 @@
             // fileList.appendChild(fileName);
 
             const listItem = document.createElement("li");
-            listItem.textContent = file;
+            listItem.textContent = `${userData.username}:${file}`;
             if(Sent===false)
             {
               //add small button to resend and make red color
             }
+            listItem.classList.add("no-bullet");
             listItem.appendChild(fileLink);
             messageList.appendChild(listItem);
             messageList.scrollTop = messageList.scrollHeight;
@@ -339,7 +361,7 @@
         return imageExtensions.includes("." + fileExtension);
       }
 
-      function showImg(imageUrl) {
+      function showImg(imageUrl,userData) {
         fetch(imageUrl,{
             method: "GET",
             credentials: "include" // Include cookies in the request
@@ -360,6 +382,7 @@
             // fileList.appendChild(img);
 
             const listItem = document.createElement("li");
+            listItem.textContent = `${userData.username}:`;
             listItem.appendChild(img);
             messageList.appendChild(listItem);
           })
@@ -384,6 +407,6 @@
 
     return values;
 }
-    </script>
-  </body>
+        </script>
+    </body>
 </html>
