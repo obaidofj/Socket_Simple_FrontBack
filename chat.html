@@ -110,9 +110,24 @@
         list-style: none; /* Remove default list item marker */
         margin-left: 20px; /* Adjust the margin to control the position */
         padding-left: 25px; /* Add padding to create space for the marker image */
-        padding-bottom: 10px;
-        background: url('./images/person-icon.png') no-repeat 0 0; /* Specify your image URL and position */
-        background-size: 20px; /* Set the width of the marker image */
+        padding-bottom:2px;
+        background: url('./images/person-icon.png') no-repeat left top; /* Specify your image URL and position */
+        background-size: 25px; /* Set the width of the marker image */
+      }
+      .no-bullet-att{
+        list-style: none; /* Remove default list item marker */
+        margin-left: 20px; /* Adjust the margin to control the position */
+        padding-left: 25px; /* Add padding to create space for the marker image */
+        padding-bottom: 2px;
+      }
+      .msgText{
+        /* margin-top:15px; */
+        /* color:#007bff; */
+        display : block;
+        padding-left: 5px;
+        padding-top: 3px;
+        margin-top: 5px;
+
       }
         </style>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
@@ -274,11 +289,15 @@
        
         if (MessegData.files.length!==0) {
             // files = data.message.attachmentsUrls;
-            showAttachmentsAndMessege(MessegData.files,MessegData.user, Sent);
+            showAttachmentsAndMessege(MessegData.files,MessegData.user,MessegData.text, Sent);
         }
         else{
         const listItem = document.createElement("li");
-        listItem.textContent = `${MessegData.user.username}:${MessegData.text}`;
+        const textSpan = document.createElement("span");
+        textSpan.textContent = `${MessegData.user.username}: ${MessegData.text}`;
+        textSpan.classList.add("msgText");
+        listItem.appendChild(textSpan);
+      
          if(Sent===false)
             {
               //add small button to resend and make red color
@@ -296,13 +315,26 @@
 
       }
 
-      function showAttachmentsAndMessege(files, userData, Sent = true) {
+      function showAttachmentsAndMessege(files, userData, text , Sent = true) {
         // console.log("userData",userData);return;
+            const listItem = document.createElement("li");
+            listItem.classList.add("no-bullet");
+            
+            const textSpan = document.createElement("span");
+            textSpan.textContent =  `  ${userData.username}:${text}`;
+            textSpan.classList.add("msgText");
+            listItem.appendChild(textSpan);
+            
+            // Create a line break element
+            const lineBreak = document.createElement("br");
+            // Append the line break after the username
+            listItem.appendChild(lineBreak);
+            messageList.appendChild(listItem);
         files.forEach((file) => {
           if (isImageFile(file)) {
-            showImg(`${host}/file/${file}`,userData);
+            showImg(`${host}/file/${file}`,userData, Sent);
           } else {
-            showNonImageFile(`${host}/file/${file}`,userData)
+            showNonImageFile(file,userData,Sent)
           }
         });
       }
@@ -348,7 +380,7 @@
         return imageExtensions.includes("." + fileExtension);
       }
 
-      function showImg(imageUrl,userData) {
+      function showImg(imageUrl,userData,Sent) {
         fetch(imageUrl,{
             method: "GET",
             credentials: "include" // Include cookies in the request
@@ -367,14 +399,13 @@
             img.src = imageUrl;
             img.alt = "Image";
             // fileList.appendChild(img);
-
+            
             const listItem = document.createElement("li");
-            listItem.classList.add("no-bullet");
-            listItem.textContent = `${userData.username}:`;
-            // Create a line break element
-            const lineBreak = document.createElement("br");
-            // Append the line break after the username
-            listItem.appendChild(lineBreak);
+            listItem.classList.add("no-bullet-att");
+            if(Sent===false)
+            {
+              //add small button to resend and make red color
+            }
             listItem.appendChild(img);
             messageList.appendChild(listItem);
           })
@@ -384,36 +415,43 @@
           });
       }
 
-      function showNonImageFile(file, userData){
+      function showNonImageFile(file, userData ,Sent){
       // Display file link and names for non-images
             const fileLink = document.createElement("a");
             // Set the link text (inner text)
-            fileLink.innerText = file; // Change the text as needed
+            fileLink.innerText = file.split('-')[1]; // Change the text as needed
 
             // Set the href attribute (URL or file path)
-            fileLink.href = file;
+            fileLink.href = `${host}/file/${file}`;
 
             // target attribute to open the link in a new tab
             fileLink.target = "_blank";
 
-            // Append the link to the document, e.g., to a specific element with an ID
-            // const container = document.getElementById("container");
-            // container.appendChild(fileLink);
-            //   fileName.textContent = file.name;
-            // fileList.appendChild(fileName);
+            const listItem = document.createElement("li");
+            listItem.classList.add("no-bullet-att");
+            if(Sent===false)
+            {
+              //add small button to resend and make red color
+            }
+            listItem.appendChild(fileLink);
+            messageList.appendChild(listItem);
+            messageList.scrollTop = messageList.scrollHeight;
 
+          }
+
+      function showText(Text,Sent){
             const listItem = document.createElement("li");
             listItem.classList.add("no-bullet");
-            listItem.textContent = `${userData.username}:${file}`;
+            listItem.textContent = Text;
             if(Sent===false)
             {
               //add small button to resend and make red color
             }
             listItem.classList.add("no-bullet");
-            listItem.appendChild(fileLink);
+            // listItem.appendChild(fileLink);
             messageList.appendChild(listItem);
             messageList.scrollTop = messageList.scrollHeight;
-          }
+      }
 
       function getValuesByKey(obj, key) {
         const values = [];
