@@ -204,7 +204,7 @@
       //add event to listen to click on sendmessege button click
       sendButton.addEventListener("click", sendMessage);
 
-      function sendMessage() {
+      async function sendMessage() {
 
         const selectedFiles = fileInput.files || [];
         // console.log("selectedFiles:",selectedFiles);
@@ -223,6 +223,51 @@
           formData.append("receiverId", 4);
           formData.append("text", message);
            
+          if(!formData.has("files"))
+          {
+
+
+
+            if (message.startsWith("s:") || message.startsWith("say:") || message.startsWith("saygpt:")) {
+
+            const regex = /^(s:|say:|gptsay:)(.+)/;
+            messageUpper='';
+            let quastion='';
+
+            if (message.match(regex)) {
+                const quastion = match[2];
+            }
+              const listItem1 = createliLoading();
+              const formd1 = new FormData();
+              formd1.append("text",quastion)
+            
+              await saveMessege(formd1,'qa',listItem1);
+              displyMsg(quastion,listItem1);
+
+              const listItem2 = createliLoading();
+
+
+              fetch(`${host}/messege/say`, {
+                method: "POST",
+                body: { message},
+                credentials: "include" // Include cookies in the request
+              })
+            .then((response) => response.json())
+            .then(async (data) => {
+              if (data.answer) {
+                const formd2 = new FormData();
+                formd2.append("text", data.answer)
+                await saveMessege(formd2,'gpt',listItem2);
+                displyMsg( data.answer,listItem2);
+              }
+
+              })
+              
+            .catch((error) => {
+              console.log("An error occurred:", error);
+            });
+            }
+          }
           
           // formData.forEach((value, key) => {
           //   console.log(`${key}: ${value}`);
@@ -271,7 +316,55 @@
         
       }
 
-     
+      function createliLoading(){
+            const img = document.createElement("img");
+            img.src = './images/loading.gif';
+            img.width='12px';
+            img.alt = "Image";
+            img.id="loading1";
+            // fileList.appendChild(img);
+            
+            const listItem = document.createElement("li");
+            listItem.classList.add("no-bullet");
+            listItem.appendChild(img);
+            messageList.appendChild(listItem);
+
+            return listItem;
+      }
+
+
+    async function  saveMessege(body,type,listItem){
+      fetch(`${host}/messege`, {
+            method: "POST",
+            body: body,
+            credentials: "include" // Include cookies in the request
+          })
+            .then((response) => response.json())
+            .then(async (data) => {
+              if (data.info === "Message sent successfully") {
+                if (type=='qa')
+                 {await displyMsg(body.message,listItem);}
+                 else if (type=='gpt')
+                 {await displyMsg(body.message,listItem);}
+              }
+            })
+            
+            .catch((error) => {
+              console.log("An error occurred:", error);
+            });
+          
+     }
+
+     async function  displyMsg(text,listItem){
+            const loadingImg = document.getElementById("loading1");
+              const msg = document.createTextNode(text); // Create a text node
+              // .textContent =
+              loadingImg.parentNode.replaceChild(listItem, loadingImg); // Replace with text
+            // messageList.appendChild(listItem);
+            messageList.scrollTop = messageList.scrollHeight;
+     }
+
+
       // Listen for messages from the server
       socket.on("message", (data) => {
         // console.log("data:",JSON.stringify( data));
@@ -350,21 +443,21 @@ function getCookie(name) {
 }
 
 // Usage
-const token = getCookie('token');
+// const token = getCookie('token');
 
-const jwt = require('jsonwebtoken'); // Use your JWT library
+// const jwt = require('jsonwebtoken'); // Use your JWT library
 
-// Decode the token
-try {
-  const decodedToken = jwt.decode(token);
-  // Extract information from the token
-  const username = decodedToken.username;
-  // const userId = decodedToken.userId;
-  console.log(username);
-  // Use the extracted data as needed
-} catch (error) {
-  console.error('Token decoding error:', error);
-}
+// // Decode the token
+// try {
+//   const decodedToken = jwt.decode(token);
+//   // Extract information from the token
+//   const username = decodedToken.username;
+//   // const userId = decodedToken.userId;
+//   console.log(username);
+//   // Use the extracted data as needed
+// } catch (error) {
+//   console.error('Token decoding error:', error);
+// }
 
  
 
