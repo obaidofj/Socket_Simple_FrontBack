@@ -228,19 +228,20 @@
 
 
 
-            if (message.startsWith("s:") || message.startsWith("say:") || message.startsWith("saygpt:")) {
+            if (message.startsWith("saygpt:")) {
 
-            const regex = /^(s:|say:|gptsay:)(.+)/;
-            messageUpper='';
+            // const regex = /^(s:|say:|gptsay:)(.+)/;
+            // messageUpper='';
             let quastion='';
 
-            if (message.match(regex)) {
-                const quastion = match[2];
-            }
+            // if (message.match(regex)) {
+                 quastion = message.substring("saygpt:".length);
+            // }
+            console.log(quastion);
               const listItem1 = createliLoading();
               const formd1 = new FormData();
               formd1.append("text",quastion)
-            
+            console.log(quastion);
               await saveMessege(formd1,'qa',listItem1);
               displyMsg(quastion,listItem1);
 
@@ -333,19 +334,19 @@
       }
 
 
-    async function  saveMessege(body,type,listItem){
+    async function  saveMessege(formbody,type,listItem){
       fetch(`${host}/messege`, {
             method: "POST",
-            body: body,
+            body: formbody,
             credentials: "include" // Include cookies in the request
           })
             .then((response) => response.json())
             .then(async (data) => {
               if (data.info === "Message sent successfully") {
                 if (type=='qa')
-                 {await displyMsg(body.message,listItem);}
+                 {await displyMsg(formbody.get("text"),listItem);}
                  else if (type=='gpt')
-                 {await displyMsg(body.message,listItem);}
+                 {await displyMsg(formbody.get("text"),listItem);}
               }
             })
             
@@ -356,11 +357,24 @@
      }
 
      async function  displyMsg(text,listItem){
-            const loadingImg = document.getElementById("loading1");
-              const msg = document.createTextNode(text); // Create a text node
+      message='';
+            const elementToRemove = document.getElementById("loading1");
+              // const msg = document.createTextNode(text); // Create a text node
               // .textContent =
-              loadingImg.parentNode.replaceChild(listItem, loadingImg); // Replace with text
+              // loadingImg.parentNode.replaceChild(listItem, loadingImg); // Replace with text
             // messageList.appendChild(listItem);
+            
+  // Check if the element exists
+  if (elementToRemove) {
+    // Remove the element from the DOM
+    elementToRemove.remove();
+                const textSpan = document.createElement("span");
+            textSpan.textContent =  `${text}`;
+            textSpan.classList.add("msgText");
+            listItem.appendChild(textSpan);
+  }
+              messageList.appendChild(listItem);
+
             messageList.scrollTop = messageList.scrollHeight;
      }
 
