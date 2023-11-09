@@ -293,7 +293,9 @@
                 files=data.message.attachmentsUrls;
                 console.log(data);
                 // msgData={"text": data.message.text ,"username":data.sessionData.username,"userId":data.sessionData.userId};
+
                 messegeUserAndFiles={"text": data.message.text, "files":files ,"user":{"username":username,"userId":userId},"reciver":{"username":reciverusername,"userid":reciverId}};//data.sessionData.userId
+
                 // console.log("data.message.attachmentsUrls : ",data.message.attachmentsUrls);
                 addMessegeWithAttachment(messegeUserAndFiles,  true);
                 data.message.attachmentsUrls='';
@@ -302,7 +304,9 @@
                 socket.emit("message", messegeUserAndFiles);
               } else {
                 sourceSocket = true;
+
                 messegeUserAndFiles={"text": message, "files":filesSelectedForUploading ,"user":{"username":username,"userId":userId},"reciver":{"username":reciverusername,"userid":reciverId}}
+
                 addMessegeWithAttachment(messegeUserAndFiles,  false);
                 data.message.attachmentsUrls='';
                 messageInput.value = "";
