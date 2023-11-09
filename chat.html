@@ -169,6 +169,9 @@
 
       const urlParams = new URLSearchParams(window.location.search);
       const username = urlParams.get("username");
+      const userId = urlParams.get("userId");
+      const reciverId = urlParams.get("reciverId");
+      const reciverusername = urlParams.get("reciverusername");
       const messageList = document.getElementById("message-list");
       const messageInput = document.getElementById("message-input");
       const sendButton = document.getElementById("send-button");
@@ -201,7 +204,7 @@
       //add event to listen to click on sendmessege button click
       sendButton.addEventListener("click", sendMessage);
 
-      function sendMessage() {
+      async function sendMessage() {
 
         const selectedFiles = fileInput.files || [];
         // console.log("selectedFiles:",selectedFiles);
@@ -220,6 +223,52 @@
           formData.append("receiverId", 4);
           formData.append("text", message);
            
+          if(!formData.has("files"))
+          {
+
+
+
+            if (message.startsWith("saygpt:")) {
+
+            // const regex = /^(s:|say:|gptsay:)(.+)/;
+            // messageUpper='';
+            let quastion='';
+
+            // if (message.match(regex)) {
+                 quastion = message.substring("saygpt:".length);
+            // }
+            console.log(quastion);
+              const listItem1 = createliLoading();
+              const formd1 = new FormData();
+              formd1.append("text",quastion)
+            console.log(quastion);
+              await saveMessege(formd1,'qa',listItem1);
+              displyMsg(quastion,listItem1);
+
+              const listItem2 = createliLoading();
+
+
+              fetch(`${host}/messege/say`, {
+                method: "POST",
+                body: { message},
+                credentials: "include" // Include cookies in the request
+              })
+            .then((response) => response.json())
+            .then(async (data) => {
+              if (data.answer) {
+                const formd2 = new FormData();
+                formd2.append("text", data.answer)
+                await saveMessege(formd2,'gpt',listItem2);
+                displyMsg( data.answer,listItem2);
+              }
+
+              })
+              
+            .catch((error) => {
+              console.log("An error occurred:", error);
+            });
+            }
+          }
           
           // formData.forEach((value, key) => {
           //   console.log(`${key}: ${value}`);
@@ -244,7 +293,9 @@
                 files=data.message.attachmentsUrls;
                 console.log(data);
                 // msgData={"text": data.message.text ,"username":data.sessionData.username,"userId":data.sessionData.userId};
-                messegeUserAndFiles={"text": data.message.text, "files":files ,"user":{"username":username,"userId":data.sessionData.userId}};
+
+                messegeUserAndFiles={"text": data.message.text, "files":files ,"user":{"username":username,"userId":userId},"reciver":{"username":reciverusername,"userid":reciverId}};//data.sessionData.userId
+
                 // console.log("data.message.attachmentsUrls : ",data.message.attachmentsUrls);
                 addMessegeWithAttachment(messegeUserAndFiles,  true);
                 data.message.attachmentsUrls='';
@@ -253,7 +304,9 @@
                 socket.emit("message", messegeUserAndFiles);
               } else {
                 sourceSocket = true;
-                messegeUserAndFiles={"text": message, "files":filesSelectedForUploading ,"user":{"username":username,"userId":data.sessionData.userId}}
+
+                messegeUserAndFiles={"text": message, "files":filesSelectedForUploading ,"user":{"username":username,"userId":userId},"reciver":{"username":reciverusername,"userid":reciverId}}
+
                 addMessegeWithAttachment(messegeUserAndFiles,  false);
                 data.message.attachmentsUrls='';
                 messageInput.value = "";
@@ -268,7 +321,68 @@
         
       }
 
-     
+      function createliLoading(){
+            const img = document.createElement("img");
+            img.src = './images/loading.gif';
+            img.width='12px';
+            img.alt = "Image";
+            img.id="loading1";
+            // fileList.appendChild(img);
+            
+            const listItem = document.createElement("li");
+            listItem.classList.add("no-bullet");
+            listItem.appendChild(img);
+            messageList.appendChild(listItem);
+
+            return listItem;
+      }
+
+
+    async function  saveMessege(formbody,type,listItem){
+      fetch(`${host}/messege`, {
+            method: "POST",
+            body: formbody,
+            credentials: "include" // Include cookies in the request
+          })
+            .then((response) => response.json())
+            .then(async (data) => {
+              if (data.info === "Message sent successfully") {
+                if (type=='qa')
+                 {await displyMsg(formbody.get("text"),listItem);}
+                 else if (type=='gpt')
+                 {await displyMsg(formbody.get("text"),listItem);}
+              }
+            })
+            
+            .catch((error) => {
+              console.log("An error occurred:", error);
+            });
+          
+     }
+
+     async function  displyMsg(text,listItem){
+      message='';
+            const elementToRemove = document.getElementById("loading1");
+              // const msg = document.createTextNode(text); // Create a text node
+              // .textContent =
+              // loadingImg.parentNode.replaceChild(listItem, loadingImg); // Replace with text
+            // messageList.appendChild(listItem);
+            
+  // Check if the element exists
+  if (elementToRemove) {
+    // Remove the element from the DOM
+    elementToRemove.remove();
+                const textSpan = document.createElement("span");
+            textSpan.textContent =  `${text}`;
+            textSpan.classList.add("msgText");
+            listItem.appendChild(textSpan);
+  }
+              messageList.appendChild(listItem);
+
+            messageList.scrollTop = messageList.scrollHeight;
+     }
+
+
       // Listen for messages from the server
       socket.on("message", (data) => {
         // console.log("data:",JSON.stringify( data));
@@ -339,24 +453,29 @@
         });
       }
 
-      function getCookie(name) {
-        // Split all cookies into an array of key-value pairs
-        const cookies = document.cookie.split(";");
+      // Get the token from a cookie by name
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+}
 
-        // Iterate through cookies to find the one with the specified name
-        for (let i = 0; i < cookies.length; i++) {
-          const cookie = cookies[i].trim();
+// Usage
+// const token = getCookie('token');
 
-          // Check if the cookie name matches the requested name
-          if (cookie.startsWith(name + "=")) {
-            // Return the cookie's value (decode it to handle special characters)
-            return decodeURIComponent(cookie.substring(name.length + 1));
-          }
-        }
+// const jwt = require('jsonwebtoken'); // Use your JWT library
 
-        // Return null if the cookie with the specified name is not found
-        return null;
-      }
+// // Decode the token
+// try {
+//   const decodedToken = jwt.decode(token);
+//   // Extract information from the token
+//   const username = decodedToken.username;
+//   // const userId = decodedToken.userId;
+//   console.log(username);
+//   // Use the extracted data as needed
+// } catch (error) {
+//   console.error('Token decoding error:', error);
+// }
 
  
 
